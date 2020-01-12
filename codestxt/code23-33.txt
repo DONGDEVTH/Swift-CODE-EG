@@ -1,0 +1,30 @@
+func clearCoreDataRecords() {
+   let requestCountries: NSFetchRequest<Countries> = Countries.fetchRequest()
+   requestCountries.predicate = NSPredicate(format: "ckupload = true")
+   do {
+      let result = try context.fetch(requestCountries)
+      for item in result {
+         item.ckupload = false
+      }
+   } catch {
+      print("Error Fetching")
+   }
+   let requestCities: NSFetchRequest<Cities> = Cities.fetchRequest()
+   requestCities.predicate = NSPredicate(format: "ckupload = true")
+   do {
+      let result = try context.fetch(requestCities)
+      for item in result {
+         item.ckupload = false
+         item.ckpicture = false
+      }
+   } catch {
+      print("Error Fetching")
+   }
+   if context.hasChanges {
+      do {
+         try context.save()
+      } catch {
+         print("Error Saving Context")
+      }
+   }
+}

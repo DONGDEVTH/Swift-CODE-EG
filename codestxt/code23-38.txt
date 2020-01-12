@@ -1,0 +1,29 @@
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+   let userSettings = UserDefaults.standard
+   let values = ["subscriptionSaved": false, "zoneCreated": false, "iCloudAvailable": false]
+   userSettings.register(defaults: values)
+
+   container = NSPersistentContainer(name: "places")
+   container.loadPersistentStores(completionHandler: { (storeDescription, error) in
+      if error != nil {
+         print("Error")
+      } else {
+         self.context = self.container.viewContext
+      }
+   })
+   application.registerForRemoteNotifications()
+
+   let containerCloudKit = CKContainer.default()
+   containerCloudKit.accountStatus(completionHandler: { (status, error) in
+      if status == CKAccountStatus.available {
+         let mainQueue = OperationQueue.main
+         mainQueue.addOperation({
+            userSettings.set(true, forKey: "iCloudAvailable")
+            AppData.checkUpdates(finishClosure: {(result) in return})
+         })
+      } else {
+         print("Error")
+      }
+   })
+   return true
+}

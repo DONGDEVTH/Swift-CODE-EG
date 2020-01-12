@@ -1,0 +1,10 @@
+override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+   super.viewWillTransition(to: size, with: coordinator)
+   if previewLayer != nil {
+      previewLayer.frame.size = size
+
+      let videoOrientation = getCurrentOrientation()
+      let connection = previewLayer.connection
+      connection?.videoOrientation = videoOrientation
+   }
+}

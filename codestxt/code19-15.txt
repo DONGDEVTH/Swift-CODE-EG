@@ -1,0 +1,23 @@
+func sendNotification() {
+   var groupid = "Group One"
+   if count >= 2 {
+      groupid = "Group Two"
+   }
+   count += 1
+
+   let content = UNMutableNotificationContent()
+   content.title = "Reminder"
+   content.body = self.messageField.text!
+   content.threadIdentifier = groupid
+
+   let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)
+
+   let id = "reminder-\(UUID())"
+   let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+   notificationcenter.add(request, withCompletionHandler: { (error) in
+      let main = OperationQueue.main
+      main.addOperation({
+         self.messageField.text = ""
+      })
+   })
+}

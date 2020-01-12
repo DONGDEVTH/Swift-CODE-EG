@@ -1,0 +1,5 @@
+var fruits = ["one": "Banana", "two": "Apple", "three": "Pear"]
+var list = fruits.sorted(by: { (value1, value2) in value1.1 < value2.1 })
+
+print("The key of the second element is \(list[0].key)")  // "two"
+print("The value of the second element is \(list[0].value)")  // "Apple"

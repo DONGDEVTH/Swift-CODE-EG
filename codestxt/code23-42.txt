@@ -1,0 +1,70 @@
+func processErrors(error: CKError) {
+   switch error.code {
+      case .notAuthenticated:
+         let userSettings = UserDefaults.standard
+         userSettings.set(false, forKey: "iCloudAvailable")
+      case .changeTokenExpired:
+         let userSettings = UserDefaults.standard
+         userSettings.removeObject(forKey: "changeToken")
+         userSettings.removeObject(forKey: "changeZoneToken")
+         Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: false)
+      case .partialFailure:
+         if let listErrors = error.userInfo[CKPartialErrorsByItemIDKey] as? NSDictionary {
+            var listFailedRecords: [CKRecord] = []
+            for (_, error) in listErrors {
+               if let recordError = error as? CKError {
+                  if let record = recordError.userInfo[CKRecordChangedErrorServerRecordKey] as? CKRecord {
+                     listFailedRecords.append(record)
+                  }
+               }
+            }
+            self.uploadFailedRecords(failedRecords: listFailedRecords)
+         }
+      default:
+         print("ERROR: \(error.code)")
+         break
+   }
+}
+func uploadFailedRecords(failedRecords: [CKRecord]) {
+   for record in failedRecords {
+      let coder = NSKeyedArchiver(requiringSecureCoding: true)
+      record.encodeSystemFields(with: coder)
+      let recordMetadata = coder.encodedData
+      let recordType = record.recordType
+      let recordName = record.recordID.recordName
+
+      if recordType == "Countries" {
+         let request: NSFetchRequest<Countries> = Countries.fetchRequest()
+         request.predicate = NSPredicate(format: "ckrecordname = %@", recordName)
+         do {
+            let result = try context.fetch(request)
+            if !result.isEmpty {
+               let item = result[0]
+               item.ckmetadata = recordMetadata
+            }
+         } catch {
+            print("Error Fetching Record")
+         }
+      } else if recordType == "Cities" {
+         let request: NSFetchRequest<Cities> = Cities.fetchRequest()
+         request.predicate = NSPredicate(format: "ckrecordname = %@", recordName)
+         do {
+            let result = try context.fetch(request)
+            if !result.isEmpty {
+               let item = result[0]
+               item.ckmetadata = recordMetadata
+            }
+         } catch {
+            print("Error Fetching Record")
+         }
+      }
+   }
+   if context.hasChanges {
+      do {
+         try context.save()
+         uploadRecords()
+      } catch {
+         print("Error Saving Context")
+      }
+   }
+}

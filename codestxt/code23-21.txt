@@ -1,0 +1,30 @@
+func configureDatabase(executeClosure: @escaping () -> Void) {
+   let userSettings = UserDefaults.standard
+   if !userSettings.bool(forKey: "subscriptionSaved") {
+      let newSubscription = CKDatabaseSubscription(subscriptionID: "updatesDatabase")
+      let info = CKSubscription.NotificationInfo()
+      info.shouldSendContentAvailable = true
+      newSubscription.notificationInfo = info
+
+      database.save(newSubscription, completionHandler: { (subscription, error) in
+         if error != nil {
+            print("Error Creating Subscription")
+         } else {
+            userSettings.set(true, forKey: "subscriptionSaved")
+         }
+      })
+   }
+   if !userSettings.bool(forKey: "zoneCreated") {
+      let newZone = CKRecordZone(zoneName: "listPlaces")
+      database.save(newZone, completionHandler: { (zone, error) in
+         if error != nil {
+            print("Error Creating Zone")
+         } else {
+            userSettings.set(true, forKey: "zoneCreated")
+            executeClosure()
+         }
+      })
+   } else {
+      executeClosure()
+   }
+}

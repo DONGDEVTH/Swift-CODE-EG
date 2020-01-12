@@ -1,0 +1,12 @@
+struct Employees: Equatable {
+    var name: String
+    var age: Int
+}
+let employee1 = Employees(name: "George", age: 32)
+let employee2 = Employees(name: "George", age: 55)
+
+if employee1 == employee2 {
+    print("Equal")
+} else {
+    print("Different")  // "Different"
+}

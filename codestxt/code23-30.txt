@@ -1,0 +1,29 @@
+func updateLocalReferences() {
+   let requestCities: NSFetchRequest<Cities> = Cities.fetchRequest()
+   requestCities.predicate = NSPredicate(format: "ckreference != nil")
+   do {
+      let listCities = try context.fetch(requestCities)
+      for city in listCities {
+         let requestCountries: NSFetchRequest<Countries> = Countries.fetchRequest()
+         requestCountries.predicate = NSPredicate(format: "ckrecordname = %@", city.ckreference!)
+         do {
+            let listCountries = try context.fetch(requestCountries)
+            if !listCountries.isEmpty {
+               city.country = listCountries[0]
+               city.ckreference = nil
+            }
+         } catch {
+            print("Error Fetching")
+         }
+      }
+   } catch {
+      print("Error Fetching")
+   }
+   if context.hasChanges {
+      do {
+         try context.save()
+      } catch {
+         print("Error Saving Context")
+      }
+   }
+}

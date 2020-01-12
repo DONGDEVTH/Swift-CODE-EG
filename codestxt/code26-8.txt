@@ -1,0 +1,35 @@
+import UIKit
+import AVFoundation
+
+class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
+   @IBOutlet weak var cameraView: UIView!
+
+   var captureSession: AVCaptureSession!
+   var stillImage: AVCapturePhotoOutput!
+   var previewLayer: AVCaptureVideoPreviewLayer!
+   var picture: UIImage!
+   var imageOrientation: UIImage.Orientation!
+
+   override func viewDidLoad() {
+      super.viewDidLoad()
+      let device = UIDevice.current
+      device.beginGeneratingDeviceOrientationNotifications()
+
+      let status = AVCaptureDevice.authorizationStatus(for: .video)
+      if status == .authorized {
+         prepareCamera()
+      } else if status == .notDetermined {
+         AVCaptureDevice.requestAccess(for: .video, completionHandler: { (granted: Bool) in
+            OperationQueue.main.addOperation({
+               if granted {
+                  self.prepareCamera()
+               } else {
+                  self.notAuthorized()
+               }
+            })
+         })
+      } else {
+         notAuthorized()
+      }
+   }
+}

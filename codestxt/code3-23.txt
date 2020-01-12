@@ -1,0 +1,6 @@
+func first(myclosure: () -> Void) {
+   myclosure()
+}
+first() {
+   print("Hello")
+}

@@ -1,0 +1,18 @@
+func getCurrentOrientation() -> AVCaptureVideoOrientation {
+   var orientation: AVCaptureVideoOrientation = .portrait
+   let device = UIDevice.current
+   switch device.orientation {
+      case .portrait:
+         orientation = .portrait
+         imageOrientation = .right
+      case .landscapeRight:
+         orientation = .landscapeLeft
+         imageOrientation = .down
+      case .landscapeLeft:
+         orientation = .landscapeRight
+         imageOrientation = .up
+      default:
+         break
+   }
+   return orientation
+}

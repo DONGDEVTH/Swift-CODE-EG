@@ -1,0 +1,10 @@
+func processErrors(error: CKError) {
+   switch error.code {
+      case .notAuthenticated:
+         let userSettings = UserDefaults.standard
+         userSettings.set(false, forKey: "iCloudAvailable")
+      default:
+         print("ERROR: \(error.code)")
+         break
+   }
+}

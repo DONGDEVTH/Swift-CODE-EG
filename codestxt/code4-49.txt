@@ -1,0 +1,8 @@
+import UIKit
+
+let app = UIApplication.shared
+
+let window = app.keyWindow
+if let bounds = window?.screen.bounds {
+   print("Size: \(bounds.size.width) x \(bounds.size.height)")
+}

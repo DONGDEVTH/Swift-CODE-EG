@@ -1,0 +1,5 @@
+var fruits = ["Banana", "Orange", "Apple", "Orange"]
+fruits.removeAll(where: { (value) in
+    return value == "Orange"
+})
+print(fruits)  // ["Banana", "Apple"]

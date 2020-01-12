@@ -1,0 +1,81 @@
+func downloadUpdates(finishClosure: @escaping (UIBackgroundFetchResult) -> Void) {
+   var listRecordsUpdated: [CKRecord] = []
+   var listRecordsDeleted: [String: String] = [:]
+   var changeToken: CKServerChangeToken!
+   var changeZoneToken: CKServerChangeToken!
+
+   let userSettings = UserDefaults.standard
+   if let data = userSettings.value(forKey: "changeToken") as? Data {
+      if let token = try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data) {
+         changeToken = token
+      }
+   }
+   if let data = userSettings.value(forKey: "changeZoneToken") as? Data {
+      if let token = try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data) {
+         changeZoneToken = token
+      }
+   }
+   var zonesIDs: [CKRecordZone.ID] = []
+   let operation = CKFetchDatabaseChangesOperation(previousServerChangeToken: changeToken)
+   operation.recordZoneWithIDChangedBlock = { (zoneID) in
+      zonesIDs.append(zoneID)
+   }
+   operation.changeTokenUpdatedBlock = { (token) in
+      changeToken = token
+   }
+   operation.fetchDatabaseChangesCompletionBlock = { (token, more, error) in
+      if error != nil {
+         finishClosure(UIBackgroundFetchResult.failed)
+      } else if !zonesIDs.isEmpty {
+         changeToken = token
+
+         let configuration = CKFetchRecordZoneChangesOperation.ZoneConfiguration()
+         configuration.previousServerChangeToken = changeZoneToken
+         let fetchOperation = CKFetchRecordZoneChangesOperation(recordZoneIDs: zonesIDs, configurationsByRecordZoneID: [zonesIDs[0]: configuration])
+         fetchOperation.recordChangedBlock = { (record) in
+            listRecordsUpdated.append(record)
+         }
+         fetchOperation.recordWithIDWasDeletedBlock = { (recordID, recordType) in
+            listRecordsDeleted[recordID.recordName] = recordType
+         }
+         fetchOperation.recordZoneChangeTokensUpdatedBlock = { (zoneID, token, data) in
+            changeZoneToken = token
+         }
+         fetchOperation.recordZoneFetchCompletionBlock = { (zoneID, token, data, more, error) in
+            if error != nil {
+               print("Error")
+            } else {
+               changeZoneToken = token
+
+               self.updateLocalRecords(listRecordsUpdated: listRecordsUpdated)
+               self.deleteLocalRecords(listRecordsDeleted: listRecordsDeleted)
+               listRecordsUpdated.removeAll()
+               listRecordsDeleted.removeAll()
+            }
+         }
+         fetchOperation.fetchRecordZoneChangesCompletionBlock = { (error) in
+            if error != nil {
+               print("Error")
+               finishClosure(UIBackgroundFetchResult.failed)
+            } else {
+               if changeToken != nil {
+                  if let data = try? NSKeyedArchiver.archivedData(withRootObject: changeToken, requiringSecureCoding: false) {
+                     userSettings.set(data, forKey: "changeToken")
+                  }
+               }
+               if changeZoneToken != nil {
+                  if let data = try? NSKeyedArchiver.archivedData(withRootObject: changeZoneToken, requiringSecureCoding: false) {
+                     userSettings.set(data, forKey: "changeZoneToken")
+                  }
+               }
+               self.updateLocalReferences()
+               finishClosure(UIBackgroundFetchResult.newData)
+            }
+         }
+         self.database.add(fetchOperation)
+      } else {
+         finishClosure(UIBackgroundFetchResult.noData)
+      }
+   }
+   database.add(operation)
+}

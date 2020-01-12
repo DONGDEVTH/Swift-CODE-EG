@@ -1,0 +1,35 @@
+func removeRecords() {
+   var listRecordsToDelete: [CKRecord.ID] = []
+
+   let request: NSFetchRequest<CKDelete> = CKDelete.fetchRequest()
+   do {
+      let result = try context.fetch(request)
+      for item in result {
+         let zone = CKRecordZone(zoneName: item.zoneName!)
+         let id = CKRecord.ID(recordName: item.recordName!, zoneID: zone.zoneID)
+         listRecordsToDelete.append(id)
+      }
+   } catch {
+      print("Error fetching record IDs")
+   }
+   if !listRecordsToDelete.isEmpty {
+      let operation = CKModifyRecordsOperation(recordsToSave: nil, recordIDsToDelete: listRecordsToDelete)
+      operation.modifyRecordsCompletionBlock = { (records, recordsID, error) in
+         if error != nil {
+            print("Error deleting records")
+         } else {
+            let request: NSFetchRequest<CKDelete> = CKDelete.fetchRequest()
+            do {
+               let result = try self.context.fetch(request)
+               for item in result {
+                  self.context.delete(item)
+               }
+               try self.context.save()
+            } catch {
+               print("Error deleting")
+            }
+         }
+      }
+      database.add(operation)
+   }
+}

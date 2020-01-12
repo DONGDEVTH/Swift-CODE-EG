@@ -1,0 +1,18 @@
+import UIKit
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+   var window: UIWindow?
+
+   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+      let traitCompact = UITraitCollection(verticalSizeClass: .compact)
+      let traitRegular = UITraitCollection(verticalSizeClass: .regular)
+
+      let barCompact = UINavigationBar.appearance(for: traitCompact)
+      barCompact.barTintColor = UIColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 1)
+      let barRegular = UINavigationBar.appearance(for: traitRegular)
+      barRegular.barTintColor = UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 1)
+
+      return true
+   }
+}

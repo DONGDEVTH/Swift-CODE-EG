@@ -1,0 +1,15 @@
+import Foundation
+
+let tokyoTimeZone = TimeZone(identifier: "Asia/Tokyo")
+let madridTimeZone = TimeZone(identifier: "Europe/Madrid")
+
+var today = Date()  // "Jul 30, 2018 at 5:35 PM"
+let formatter = DateFormatter()
+formatter.dateStyle = DateFormatter.Style.short
+formatter.timeStyle = DateFormatter.Style.short
+
+formatter.timeZone = tokyoTimeZone
+let tokyoDate = formatter.string(from: today) // "7/31/18, 6:35 AM"
+
+formatter.timeZone = madridTimeZone
+let madridDate = formatter.string(from: today)  // "7/30/18, 11:35 PM"

@@ -1,0 +1,15 @@
+func processErrors(error: CKError) {
+   switch error.code {
+      case .notAuthenticated:
+         let userSettings = UserDefaults.standard
+         userSettings.set(false, forKey: "iCloudAvailable")
+      case .changeTokenExpired:
+         let userSettings = UserDefaults.standard
+         userSettings.removeObject(forKey: "changeToken")
+         userSettings.removeObject(forKey: "changeZoneToken")
+         Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: false)
+      default:
+         print("ERROR: \(error.code)")
+         break
+   }
+}

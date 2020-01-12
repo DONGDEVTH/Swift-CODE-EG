@@ -1,0 +1,4 @@
+var age = 19
+var message = "The customer is "
+message += age < 21 ? "underage" : "allowed"
+message  // "The customer is underage"

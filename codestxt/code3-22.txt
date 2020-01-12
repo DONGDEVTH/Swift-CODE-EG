@@ -1,0 +1,7 @@
+let process = {
+   print("Hello")
+}
+func first(myclosure: () -> Void) {
+   myclosure()
+}
+first(myclosure: process)

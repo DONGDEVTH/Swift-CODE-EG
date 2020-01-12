@@ -1,0 +1,36 @@
+func deleteLocalRecords(listRecordsDeleted: [String: String]) {
+   for (recordName, recordType) in listRecordsDeleted {
+      if recordType == "Countries" {
+         let request: NSFetchRequest<Countries> = Countries.fetchRequest()
+         request.predicate = NSPredicate(format: "ckrecordname = %@", recordName)
+         do {
+            let result = try context.fetch(request)
+            if !result.isEmpty {
+               let country = result[0]
+               context.delete(country)
+            }
+         } catch {
+            print("Error Fetching")
+         }
+      } else if recordType == "Cities" {
+         let request: NSFetchRequest<Cities> = Cities.fetchRequest()
+         request.predicate = NSPredicate(format: "ckrecordname = %@", recordName)
+         do {
+            let result = try context.fetch(request)
+            if !result.isEmpty {
+               let city = result[0]
+               context.delete(city)
+            }
+         } catch {
+            print("Error Fetching")
+         }
+      }
+   }
+   if context.hasChanges {
+      do {
+         try context.save()
+      } catch {
+         print("Error Saving Context")
+      }
+   }
+}

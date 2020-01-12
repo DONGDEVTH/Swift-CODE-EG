@@ -1,0 +1,5 @@
+var fruits = [55, 12, 32, 5, 9]
+let found = fruits.contains(where: { (value) in
+    return value > 60
+})
+print(found)  // false

@@ -1,0 +1,11 @@
+fetchOperation.recordZoneFetchCompletionBlock = { (zoneID, token, data, more, error) in
+   if let ckerror = error as? CKError {
+      self.processErrors(error: ckerror)
+   } else {
+      changeZoneToken = token
+      self.updateLocalRecords(listRecordsUpdated: listRecordsUpdated)
+      self.deleteLocalRecords(listRecordsDeleted: listRecordsDeleted)
+      listRecordsUpdated.removeAll()
+      listRecordsDeleted.removeAll()
+   }
+}

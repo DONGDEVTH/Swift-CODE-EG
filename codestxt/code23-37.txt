@@ -1,0 +1,15 @@
+import UIKit
+import CloudKit
+
+class PicturesViewController: UIViewController {
+   @IBOutlet weak var cityPicture: UIImageView!
+   var selectedCity: Cities!
+
+   override func viewDidLoad() {
+      if selectedCity != nil {
+         if let picture = selectedCity.picture {
+            cityPicture.image = UIImage(data: picture)
+         }
+      }
+   }
+}

@@ -1,0 +1,18 @@
+override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+   let cell = tableView.dequeueReusableCell(withIdentifier: "booksCell", for: indexPath) as! BooksCell
+        
+   let book = listOfBooks[indexPath.row]
+   cell.bookTitle.text = book.title
+   if book.thumbnail != nil {
+      cell.bookCover.image = UIImage(data: book.thumbnail!)
+   }
+   cell.bookYear.text = "Year: \(book.year)"
+
+   let author = book.author
+   if author != nil {
+      cell.bookAuthor.text = author!.name
+   } else {
+      cell.bookAuthor.text = "Not Defined"
+   }
+   return cell
+}

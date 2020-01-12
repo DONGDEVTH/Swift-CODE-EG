@@ -1,0 +1,22 @@
+@IBAction func saveBook(_ sender: UIBarButtonItem) {
+   let year = Int32(bookYear.text!)
+   let title = bookTitle.text!.trimmingCharacters(in: .whitespaces)
+   if title != "" && year != nil {
+      let newBook = Books(context: context)
+      newBook.title = title
+      newBook.year = year!
+ 
+      let nocover = UIImage(named: "nocover")
+      let nothumbnail = UIImage(named: "nothumbnail")
+      newBook.cover = nocover?.pngData()
+      newBook.thumbnail = nothumbnail?.pngData()
+      newBook.author = selectedAuthor
+
+      do {
+         try context.save()
+      } catch {
+         print("Error")
+      }
+      navigationController?.popViewController(animated: true)
+   }
+}

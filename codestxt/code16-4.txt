@@ -1,0 +1,10 @@
+override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+   let mode = splitViewController?.displayMode
+   if mode == .primaryOverlay {
+      splitViewController?.preferredDisplayMode = .primaryHidden
+   }
+}
+override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+   super.viewWillTransition(to: size, with: coordinator)
+   splitViewController?.preferredDisplayMode = .automatic
+}

@@ -1,0 +1,8 @@
+func checkUpdates(finishClosure: @escaping (UIBackgroundFetchResult) -> Void) {
+   configureDatabase(executeClosure: {
+   let mainQueue = OperationQueue.main
+      mainQueue.addOperation({
+         self.downloadUpdates(finishClosure: finishClosure)
+      })
+   })
+}

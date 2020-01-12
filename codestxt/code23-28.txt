@@ -1,0 +1,63 @@
+func updateLocalRecords(listRecordsUpdated: [CKRecord]) {
+   for record in listRecordsUpdated {
+      let coder = NSKeyedArchiver(requiringSecureCoding: true)
+      record.encodeSystemFields(with: coder)
+      let recordMetadata = coder.encodedData
+
+      let recordType = record.recordType
+      let recordName = record.recordID.recordName
+
+      if recordType == "Countries" {
+         let request: NSFetchRequest<Countries> = Countries.fetchRequest()
+         request.predicate = NSPredicate(format: "ckrecordname = %@", recordName)
+         do {
+            var country: Countries!
+            let result = try context.fetch(request)
+            if result.isEmpty {
+               country = Countries(context: context)
+               country.ckrecordname = recordName
+            } else {
+               country = result[0]
+            }
+            country.ckmetadata = recordMetadata
+            country.ckupload = false
+            country.name = record["name"] as? String
+         } catch {
+            print("Error Fetching")
+         }
+      } else if recordType == "Cities" {
+         let request: NSFetchRequest<Cities> = Cities.fetchRequest()
+         request.predicate = NSPredicate(format: "ckrecordname = %@", recordName)
+         do {
+            var city: Cities!
+            let result = try context.fetch(request)
+            if result.isEmpty {
+               city = Cities(context: context)
+               city.ckrecordname = recordName
+            } else {
+               city = result[0]
+            }
+            city.ckmetadata = recordMetadata
+            city.ckupload = false
+            city.ckpicture = false
+            city.name = record["name"] as? String
+            if let reference = record["country"] as? CKRecord.Reference {
+               city.ckreference = reference.recordID.recordName
+            }
+            if let asset = record["picture"] as? CKAsset {
+               let picture = UIImage(contentsOfFile: asset.fileURL.path)
+               city.picture = picture?.pngData()
+            }
+         } catch {
+            print("Error Fetching")
+         }
+      }
+   }
+   if context.hasChanges {
+      do {
+         try context.save()
+      } catch {
+         print("Error Saving Context")
+      }
+   }
+}

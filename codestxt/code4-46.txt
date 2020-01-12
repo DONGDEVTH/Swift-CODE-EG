@@ -1,0 +1,13 @@
+import UIKit
+
+let app = UIApplication.shared
+
+var state = app.applicationState
+switch state {
+   case .active:
+      print("The application is active")
+   case .inactive:
+      print("The application is inactive")
+   case .background:
+      print("The application is in the background")
+}

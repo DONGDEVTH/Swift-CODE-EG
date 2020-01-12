@@ -1,0 +1,145 @@
+import UIKit
+import CloudKit
+import CoreData
+
+class CitiesViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+   var context: NSManagedObjectContext!
+   var fetchedController: NSFetchedResultsController<Cities>!
+   var selectedCountry: Countries!
+
+   override func viewDidLoad() {
+      super.viewDidLoad()
+      let app = UIApplication.shared
+      let appDelegate = app.delegate as! AppDelegate
+      context = appDelegate.context
+
+      if selectedCountry != nil {
+         let request: NSFetchRequest<Cities> = Cities.fetchRequest()
+         request.predicate = NSPredicate(format: "country = %@", selectedCountry)
+         let sort = NSSortDescriptor(key: "name", ascending: true)
+         request.sortDescriptors = [sort]
+         fetchedController = NSFetchedResultsController(fetchRequest: request, managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil)
+         fetchedController.delegate = self
+         do {
+            try fetchedController.performFetch()
+         } catch {
+            print("Error")
+         }
+      }
+   }
+   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+      if let sections = fetchedController.sections {
+         let sectionInfo = sections[section]
+         return sectionInfo.numberOfObjects
+      }
+      return 0
+   }
+   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+      let cell = tableView.dequeueReusableCell(withIdentifier: "citiesCell", for: indexPath)
+      let city = fetchedController.object(at: indexPath)
+      cell.textLabel?.text = city.name
+      return cell
+   }
+   func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+      switch type {
+         case .delete:
+            if let path = indexPath {
+               tableView.deleteRows(at: [path], with: .fade)
+            }
+         case .insert:
+            if let path = newIndexPath {
+               tableView.insertRows(at: [path], with: .fade)
+            }
+         case .update:
+            if let path = indexPath {
+               let cell = tableView.cellForRow(at: path)
+               let city = fetchedController.object(at: path)
+               cell?.textLabel?.text = city.name
+            }
+         default:
+            break
+      }
+   }
+   func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+      tableView.beginUpdates()
+   }
+   func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+      tableView.endUpdates()
+   }
+   @IBAction func addCity(_ sender: UIBarButtonItem) {
+      let alert = UIAlertController(title: "Insert City", message: nil, preferredStyle: .alert)
+      let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+      alert.addAction(cancel)
+      let action = UIAlertAction(title: "Save", style: .default, handler: { (action) in
+         if let fields = alert.textFields {
+            let name = fields[0].text!
+            let text = name.trimmingCharacters(in: .whitespaces)
+            if !text.isEmpty {
+               let newCity = Cities(context: self.context)
+               newCity.name = name
+               newCity.country = self.selectedCountry
+               newCity.ckupload = true
+               newCity.ckpicture = true
+               newCity.ckreference = self.selectedCountry.ckrecordname
+               if let picture = UIImage(named: "Toronto.jpg") {
+                  newCity.picture = picture.pngData()
+               }
+               let recordName = "idcity-\(UUID())"
+               let zone = CKRecordZone(zoneName: "listPlaces")
+               let id = CKRecord.ID(recordName: recordName, zoneID: zone.zoneID)
+               let record = CKRecord(recordType: "Cities", recordID: id)
+
+               let coder = NSKeyedArchiver(requiringSecureCoding: true)
+               record.encodeSystemFields(with: coder)
+               let metadata = coder.encodedData
+
+               newCity.ckmetadata = metadata
+               newCity.ckrecordname = recordName
+
+               do {
+                  try self.context.save()
+                  AppData.uploadRecords()
+               } catch {
+                  print("Error")
+               }
+            }
+         }
+      })
+      alert.addAction(action)
+      alert.addTextField(configurationHandler: nil)
+      present(alert, animated: true, completion: nil)
+   }
+   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+      if segue.identifier == "showPicture" {
+         let controller = segue.destination as! PicturesViewController
+         if let indexPath = tableView.indexPathForSelectedRow {
+            let city = fetchedController.object(at: indexPath)
+            controller.selectedCity = city
+         }
+      }
+   }
+   @IBAction func editCities(_ sender: UIBarButtonItem) {
+      if tableView.isEditing {
+         tableView.setEditing(false, animated: true)
+      } else {
+         tableView.setEditing(true, animated: true)
+      }
+   }
+   override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+      if editingStyle == UITableViewCell.EditingStyle.delete {
+         let city = fetchedController.object(at: indexPath)
+
+         let newItem = CKDelete(context: context)
+         newItem.zoneName = "listPlaces"
+         newItem.recordName = city.ckrecordname
+         context.delete(city)
+         do {
+            try context.save()
+            AppData.removeRecords()
+         } catch {
+            print("Error")
+         }
+         tableView.setEditing(false, animated: true)
+      }
+   }
+}

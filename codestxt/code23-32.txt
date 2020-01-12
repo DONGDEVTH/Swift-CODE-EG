@@ -1,0 +1,61 @@
+func getRecordsToUpload() -> [CKRecord] {
+   var list: [CKRecord] = []
+   let requestCountries: NSFetchRequest<Countries> = Countries.fetchRequest()
+   requestCountries.predicate = NSPredicate(format: "ckupload = true")
+   do {
+      let result = try context.fetch(requestCountries)
+      for item in result {
+         var recordtemp: CKRecord!
+         if let coder = try? NSKeyedUnarchiver(forReadingFrom: item.ckmetadata!) {
+            coder.requiresSecureCoding = true
+            recordtemp = CKRecord(coder: coder)
+            coder.finishDecoding()
+         }
+         if let record = recordtemp {
+            record.setObject(item.name! as NSString, forKey: "name")
+            list.append(record)
+         }
+      }
+   } catch {
+      print("Error Fetching")
+   }
+   let requestCities: NSFetchRequest<Cities> = Cities.fetchRequest()
+   requestCities.predicate = NSPredicate(format: "ckupload = true")
+   do {
+      let result = try context.fetch(requestCities)
+      for item in result {
+         var recordtemp: CKRecord!
+         if let coder = try? NSKeyedUnarchiver(forReadingFrom: item.ckmetadata!) {
+            coder.requiresSecureCoding = true
+            recordtemp = CKRecord(coder: coder)
+            coder.finishDecoding()
+         }
+         if let record = recordtemp {
+            record.setObject(item.name! as NSString, forKey: "name")
+
+            if item.ckpicture && item.picture != nil {
+               var url = URL(fileURLWithPath: NSTemporaryDirectory())
+               url = url.appendingPathComponent("tempfile.png")
+               do {
+                  let pngImage = item.picture!
+                  try pngImage.write(to: url, options: .atomic)
+                  let asset = CKAsset(fileURL: url)
+                  record.setObject(asset, forKey: "picture")
+               } catch {
+                  print("Image not stored")
+               }
+            }
+            if let country = item.country {
+               let zone = CKRecordZone(zoneName: "listPlaces")
+               let id = CKRecord.ID(recordName: country.ckrecordname!, zoneID: zone.zoneID)
+               let reference = CKRecord.Reference(recordID: id, action: .deleteSelf)
+               record.setObject(reference, forKey: "country")
+            }
+            list.append(record)
+         }
+      }
+   } catch {
+      print("Error Fetching")
+   }
+   return list
+}

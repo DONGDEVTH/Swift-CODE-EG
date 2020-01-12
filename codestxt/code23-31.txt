@@ -1,0 +1,16 @@
+func uploadRecords() {
+   let listRecordsToUpload = getRecordsToUpload()
+   if !listRecordsToUpload.isEmpty {
+      configureDatabase(executeClosure: {
+         let operation = CKModifyRecordsOperation(recordsToSave: listRecordsToUpload, recordIDsToDelete: nil)
+         operation.modifyRecordsCompletionBlock = { (records, recordsID, error) in
+            if error != nil {
+               print("Error uploading records")
+            } else {
+               self.clearCoreDataRecords()
+            }
+         }
+         self.database.add(operation)
+      })
+   }
+}

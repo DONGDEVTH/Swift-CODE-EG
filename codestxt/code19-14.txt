@@ -1,0 +1,11 @@
+@IBAction func saveNotification(_ sender: UIButton) {
+   notificationcenter.getNotificationSettings(completionHandler: { (settings) in
+      let status = settings.authorizationStatus
+      if status == .authorized || status == .provisional {
+         let main = OperationQueue.main
+         main.addOperation({
+            self.sendNotification()
+         })
+      }
+   })
+}
